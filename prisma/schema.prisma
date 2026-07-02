@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  role      Role     @relation(fields: [roleId], references: [id])
+  roleId    String
+  office    Office?  @relation(fields: [officeId], references: [id])
+  officeId  String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  demandRequests  Demand[] @relation("RequesterUser")
+  approvals       Approval[] @relation("ApproverUser")
+  auditLogs       AuditLog[] @relation("ActorUser")
+}
+
+model Role {
+  id        String @id @default(cuid())
+  name      String @unique
+  permissions String[] @default([])
+  users     User[]
+}
+
+model Office {
+  id       String @id @default(cuid())
+  name     String
+  type     String
+  parentId String?
+  parent   Office? @relation("OfficeHierarchy", fields: [parentId], references: [id])
+  children Office[] @relation("OfficeHierarchy")
+  users    User[]
+  createdAt DateTime @default(now())
+}
+
+model Item {
+  id          String   @id @default(cuid())
+  sku         String   @unique
+  name        String
+  unit        String
+  cost        Float
+  price       Float
+  reorderLevel Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  demandLines DemandLine[]
+  stockLedger StockLedger[]
+}
+
+model Stock {
+  id        String @id @default(cuid())
+  item      Item   @relation(fields: [itemId], references: [id])
+  itemId    String @unique
+  quantity  Int    @default(0)
+  reserved  Int    @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model StockLedger {
+  id        String   @id @default(cuid())
+  item      Item     @relation(fields: [itemId], references: [id])
+  itemId    String
+  type      String
+  quantity  Int
+  reference String?
+  createdAt DateTime @default(now())
+}
+
+model Demand {
+  id         String       @id @default(cuid())
+  requester  User         @relation("RequesterUser", fields: [requesterId], references: [id])
+  requesterId String
+  status     String       @default("draft")
+  lines      DemandLine[]
+  approvals  Approval[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model DemandLine {
+  id        String @id @default(cuid())
+  demand    Demand @relation(fields: [demandId], references: [id])
+  demandId  String
+  item      Item   @relation(fields: [itemId], references: [id])
+  itemId    String
+  qty       Int
+  createdAt DateTime @default(now())
+}
+
+model Approval {
+  id        String   @id @default(cuid())
+  demand    Demand   @relation(fields: [demandId], references: [id])
+  demandId  String
+  approver  User     @relation("ApproverUser", fields: [approverId], references: [id])
+  approverId String
+  level     Int
+  decision  String?
+  comment   String?
+  decidedAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  actor     User?    @relation("ActorUser", fields: [actorId], references: [id])
+  actorId   String?
+  details   Json?
+  createdAt DateTime @default(now())
+}
