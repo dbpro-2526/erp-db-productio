@@ -1,0 +1,23 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm ci",
+  "framework": "nextjs",
+  "env": [
+    {
+      "key": "POSTGRES_URL",
+      "description": "PostgreSQL database URL",
+      "value": ""
+    },
+    {
+      "key": "JWT_SECRET",
+      "description": "JWT secret key",
+      "value": ""
+    },
+    {
+      "key": "NEXT_PUBLIC_BASE_URL",
+      "description": "Application base URL",
+      "value": ""
+    }
+  ]
+}
